@@ -1,5 +1,7 @@
 # wordpress-to-markdown
 
+**this is a modified version of the original to deal with the mith.umd.edu wordpress site**
+
 This script uses the standard exported XML file from WordPress, and creates a folder/file structure that contains all of the blog posts, converted to markdown format. It will also download all of the images.
 
 Instructions for exporting your information from WordPress [can be found here](http://en.support.wordpress.com/export/).

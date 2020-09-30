@@ -21,8 +21,17 @@ const rehype2remark = require("rehype-remark");
 const stringify = require("remark-stringify");
 const imageType = require("image-type");
 
+// types to include
+const contentTypes = [
+    'mith_dialogue',
+    'mith_person',
+    'mith_research',
+    'page',
+    'post',
+]
+
 // includes all sorts of edge cases and weird stuff
-processExport("test-wordpress-dump.xml");
+processExport("wordpress.xml");
 // full dump
 // processExport("ageekwithahat.wordpress.2020-08-22 (1).xml");
 
@@ -44,7 +53,7 @@ function processExport(file) {
 
             fs.mkdir("out", function () {
                 posts
-                    .filter((p) => p["wp:post_type"][0] === "post")
+                    .filter((p) => contentTypes.includes(p["wp:post_type"][0]))
                     .forEach(processPost);
             });
         });
@@ -169,10 +178,12 @@ async function processPost(post) {
         .map((meta) => meta["wp:meta_value"][0])
         .filter((url) => url.startsWith("http"));
 
+    const postType = post['wp:post_type']
+
     let heroImage = "";
 
     let directory = slug;
-    let fname = `index.mdx`;
+    let fname = `index.md`;
 
     try {
         fs.mkdirSync(`out/${directory}`);
@@ -240,6 +251,7 @@ async function processPost(post) {
     }
 
     const redirect_from = post.link[0]
+        .replace("https://mith.umd.edu", "")
         .replace("https://swizec.com", "")
         .replace("https://www.swizec.com", "");
     let frontmatter;
@@ -247,10 +259,11 @@ async function processPost(post) {
         frontmatter = [
             "---",
             `title: '${postTitle.replace(/'/g, "''")}'`,
+            `type: ${postType}`,
             `description: "${description}"`,
             `published: ${format(postDate, "yyyy-MM-dd")}`,
-            `redirect_from: 
-            - ${redirect_from}`,
+            `redirect_from: `,
+            `- ${redirect_from}`,
         ];
     } catch (e) {
         console.log("----------- BAD TIME", postTitle, postDate);
@@ -258,10 +271,16 @@ async function processPost(post) {
     }
 
     if (categories && categories.length > 0) {
-        frontmatter.push(`categories: "${categories.join(", ")}"`);
+        // make sure they are unique
+        const uniqCats = Array.from(new Set(categories))
+        frontmatter.push('categories:')
+        frontmatter = frontmatter.concat(uniqCats.map(cat => `- ${cat}`))
     }
 
-    frontmatter.push(`hero: ${heroImage || "../../../defaultHero.jpg"}`);
+    if (heroImage) {
+      frontmatter.push(`image: ${heroImage}`);
+    }
+
     frontmatter.push("---");
     frontmatter.push("");
 
