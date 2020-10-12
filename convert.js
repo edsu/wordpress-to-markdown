@@ -143,6 +143,10 @@ async function processImages({ postData, directory }) {
 async function processPost(post) {
     console.log("Processing Post");
 
+    if (post['wp:status'] != 'publish') {
+        return 
+    }
+
     const postTitle =
         typeof post.title === "string" ? post.title : post.title[0];
     console.log("Post title: " + postTitle);
@@ -168,6 +172,8 @@ async function processPost(post) {
                 meta["wp:meta_key"][0].includes("description")
         ),
     ].sort((a, b) => b.length - a.length)[0];
+
+    const author = post["dc:creator"][0];
 
     const heroURLs = post["wp:postmeta"]
         .filter(
@@ -260,6 +266,7 @@ async function processPost(post) {
             "---",
             `title: '${postTitle.replace(/'/g, "''")}'`,
             `type: ${postType}`,
+            `author: ${author}`,
             `description: "${description}"`,
             `published: ${format(postDate, "yyyy-MM-dd")}`,
             `redirect_from: `,
